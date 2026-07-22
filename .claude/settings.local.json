@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-ChildItem -Recurse app, components, lib, supabase, tests, scripts -File | Select-Object FullName | ForEach-Object { $_.FullName.Replace\\('C:\\\\Users\\\\chris\\\\Downloads\\\\Mon-Beau-Miroir\\\\',''\\) })",
+      "Bash(npm run *)",
+      "Bash(npx playwright *)"
+    ]
+  }
+}

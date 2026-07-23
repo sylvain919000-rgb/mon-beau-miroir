@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/cn";
+import { OFFERED_SCORES } from "@/lib/constants";
 
 interface ScoreSelectorProps {
   value: number | null;
@@ -14,9 +15,9 @@ interface ScoreSelectorProps {
   ariaLabel: string;
 }
 
-// No 7 on purpose: it's the fence-sitter's score. Raters must commit —
-// 6 or 8. (The database still accepts 7s, so historical ratings stay valid.)
-const SCORES = [1, 2, 3, 4, 5, 6, 8, 9, 10];
+// 3-10 without 7 (see OFFERED_SCORES): no cruelty scores, no fence-sitting.
+// The database still accepts 1-10, so historical ratings stay valid.
+const SCORES = [...OFFERED_SCORES];
 
 /** The tactile 1-10 control used for the overall score and every attribute. */
 export function ScoreSelector({ value, onSelect, compact = false, ariaLabel }: ScoreSelectorProps) {

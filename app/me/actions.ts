@@ -1,8 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { getModerationProvider } from "@/lib/moderation/provider";
+import { appUrl, notifyUserByEmail } from "@/lib/email/notifications";
+import { copy } from "@/lib/copy";
 
 interface ActionResult {
   error: string | null;
@@ -40,6 +43,29 @@ export async function activateUploadedPhoto(storagePath: string): Promise<Action
 
   await runModerationIntake(user.id, storagePath);
 
+  // Tell the owner where their photo stands. Intake may have already
+  // auto-approved it (future automated provider), so read the outcome
+  // instead of assuming "pending".
+  const { data: uploaded } = await supabase
+    .from("photos")
+    .select("moderation")
+    .eq("owner_id", user.id)
+    .eq("status", "active")
+    .maybeSingle();
+  if (uploaded?.moderation === "approved") {
+    await notifyUserByEmail(
+      user.id,
+      copy.emails.approvedSubject,
+      copy.emails.approvedBody(appUrl())
+    );
+  } else {
+    await notifyUserByEmail(
+      user.id,
+      copy.emails.pendingSubject,
+      copy.emails.pendingBody(appUrl())
+    );
+  }
+
   revalidatePath("/me");
   return { error: null };
 }
@@ -71,6 +97,16 @@ async function runModerationIntake(ownerId: string, storagePath: string) {
     // Never block an upload on moderation plumbing; pending is the safe state.
     console.error("Moderation intake failed", error);
   }
+}
+
+/**
+ * Ends the session and lands on the login page. A server action (not a
+ * client-side call) so the auth cookies are cleared where they live.
+ */
+export async function signOut(): Promise<void> {
+  const supabase = await createClient();
+  await supabase.auth.signOut();
+  redirect("/login");
 }
 
 /** Removes the user's active photo without replacing it. */

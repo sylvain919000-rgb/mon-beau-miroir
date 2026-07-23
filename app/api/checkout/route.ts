@@ -54,7 +54,12 @@ export async function POST(request: Request) {
       .eq("id", user.id);
   }
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  // Prefer the configured URL, else the caller's own origin — never a
+  // hardcoded localhost, which would strand live checkouts.
+  const appUrl =
+    process.env.NEXT_PUBLIC_APP_URL ??
+    request.headers.get("origin") ??
+    "https://mon-beau-miroir.bereytapps.com";
   const session = await stripe.checkout.sessions.create({
     customer: customerId,
     mode: product.mode,

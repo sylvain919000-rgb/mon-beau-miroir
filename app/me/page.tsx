@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { PhotoManager } from "./photo-manager";
 import { PrivacyToggle } from "./privacy-toggle";
+import { signOut } from "./actions";
 import Link from "next/link";
 
 export default async function MePage() {
@@ -57,6 +58,15 @@ export default async function MePage() {
         >
           Your rating history →
         </Link>
+
+        <form action={signOut} className="mt-12 border-t border-line pt-6">
+          <button
+            type="submit"
+            className="w-full rounded-pill border border-line py-3 text-sm font-semibold text-ink-soft transition-colors duration-[var(--mbm-dur-fast)] ease-mbm hover:bg-surface hover:text-danger"
+          >
+            Log out
+          </button>
+        </form>
       </main>
     </>
   );

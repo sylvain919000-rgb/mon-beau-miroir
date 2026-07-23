@@ -36,6 +36,18 @@ export default async function InboxPage() {
   }
   const conversations = [...bySender.entries()];
 
+  // Avatar colors for the senders (blue = male, green = admin).
+  const senderUsernames = conversations.map(([senderUsername]) => senderUsername);
+  const { data: senderProfiles } = senderUsernames.length
+    ? await supabase
+        .from("profiles")
+        .select("username, birth_sex, is_admin")
+        .in("username", senderUsernames)
+    : { data: [] };
+  const senderByUsername = new Map(
+    (senderProfiles ?? []).map((profile) => [profile.username, profile])
+  );
+
   return (
     <>
       <AppNav />
@@ -59,7 +71,12 @@ export default async function InboxPage() {
                   href={entitlements.canRead ? `/inbox/${senderUsername}` : "/inbox"}
                   className="flex items-center gap-3 rounded-lg border border-line bg-surface p-3 transition-colors duration-[var(--mbm-dur-fast)] ease-mbm hover:bg-surface-2"
                 >
-                  <AvatarFallback name={senderUsername} sizeClass="size-9" />
+                  <AvatarFallback
+                    name={senderUsername}
+                    sex={senderByUsername.get(senderUsername)?.birth_sex ?? null}
+                    isAdmin={senderByUsername.get(senderUsername)?.is_admin ?? false}
+                    sizeClass="size-9"
+                  />
                   <span className="flex-1">
                     <span className="block text-sm font-semibold text-ink">
                       @{senderUsername}

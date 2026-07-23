@@ -2,6 +2,7 @@ import { AppNav } from "@/components/app-nav";
 import { requireAdmin } from "@/lib/admin";
 import { SafePhoto } from "@/components/safe-photo";
 import { PendingPhotoControls, ReportControls } from "./admin-controls";
+import { DmMember } from "./dm-member";
 
 /**
  * The moderation desk: pending photos awaiting a verdict, and open
@@ -44,6 +45,13 @@ export default async function AdminPage() {
         <h1 className="font-display text-2xl text-ink">Moderation desk</h1>
 
         <section className="mt-6">
+          <h2 className="text-sm font-bold text-ink">Message a member</h2>
+          <div className="mt-3">
+            <DmMember />
+          </div>
+        </section>
+
+        <section className="mt-8">
           <h2 className="text-sm font-bold text-ink">
             Pending photos ({(pendingPhotos ?? []).length})
           </h2>

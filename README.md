@@ -66,6 +66,13 @@ covers the public pages and consent gating without needing Supabase data.
    `stripe listen --forward-to localhost:3000/api/stripe/webhook`.
 3. Enable the Customer Portal once in Stripe Dashboard → Settings → Billing.
 
+## Email notifications
+Transactional emails (photo in review / photo approved / rating
+milestones 1-3-5-10) are sent through Resend's HTTP API — no SDK.
+Set `RESEND_API_KEY` and a verified `EMAIL_FROM` in the environment;
+without them, sends are logged and skipped, and no user flow is ever
+blocked by email problems.
+
 ## Moderation & admin
 - Every photo starts `pending` and is invisible to others until approved.
 - Make yourself admin (SQL editor):

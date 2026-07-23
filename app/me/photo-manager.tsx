@@ -92,6 +92,11 @@ export function PhotoManager({ userId, photo }: PhotoManagerProps) {
                 {copy.moderation.pending}
               </p>
             )}
+            {photo.moderation === "approved" && (
+              <p className="mt-2 rounded-md bg-surface-2 p-3 text-sm text-success">
+                ✓ {copy.moderation.approved}
+              </p>
+            )}
             {photo.moderation === "rejected" && (
               <p className="mt-2 rounded-md bg-surface-2 p-3 text-sm text-danger">
                 {copy.moderation.rejected}

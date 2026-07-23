@@ -7,7 +7,7 @@ import { getStripe } from "@/lib/billing/stripe";
  * Opens the Stripe Customer Portal (invoices, card, one-click cancel —
  * the cancellation path EU consumer rules expect to be easy).
  */
-export async function POST() {
+export async function POST(request: Request) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -24,7 +24,12 @@ export async function POST() {
   }
 
   const stripe = getStripe();
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  // Prefer the configured URL, else the caller's own origin — never a
+  // hardcoded localhost, which would strand live portal sessions.
+  const appUrl =
+    process.env.NEXT_PUBLIC_APP_URL ??
+    request.headers.get("origin") ??
+    "https://mon-beau-miroir.bereytapps.com";
   const session = await stripe.billingPortal.sessions.create({
     customer: profile.stripe_customer_id,
     return_url: `${appUrl}/settings/billing`,

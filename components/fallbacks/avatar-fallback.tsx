@@ -10,6 +10,8 @@ interface AvatarFallbackProps {
    * who hasn't answered the demographics gate) keep the warm rose one.
    */
   sex?: BirthSex | null;
+  /** Staff marker: admins get the green gradient, overriding sex colors. */
+  isAdmin?: boolean;
   className?: string;
 }
 
@@ -18,6 +20,7 @@ export function AvatarFallback({
   name,
   sizeClass = "size-9",
   sex = null,
+  isAdmin = false,
   className,
 }: AvatarFallbackProps) {
   const initials = name
@@ -33,9 +36,11 @@ export function AvatarFallback({
       aria-hidden
       className={cn(
         "inline-flex items-center justify-center rounded-pill",
-        sex === "male"
-          ? "bg-gradient-to-br from-info-soft to-info text-bg"
-          : "bg-gradient-to-br from-rose to-peach text-ink",
+        isAdmin
+          ? "bg-gradient-to-br from-success-soft to-success text-bg"
+          : sex === "male"
+            ? "bg-gradient-to-br from-info-soft to-info text-bg"
+            : "bg-gradient-to-br from-rose to-peach text-ink",
         "text-xs font-bold",
         sizeClass,
         className

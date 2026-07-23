@@ -32,6 +32,7 @@
   --color-danger: #d95c4a;
   --color-info: #6e8fc9;
   --color-info-soft: #aebfe0;      /* light end of the male-avatar gradient */
+  --color-success-soft: #a9d4bb;   /* light end of the admin-avatar gradient */
 
   /* ---- Typography ---- */
   --font-sans: "Plus Jakarta Sans Variable", ui-sans-serif, system-ui, sans-serif;

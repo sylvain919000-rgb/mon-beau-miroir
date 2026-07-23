@@ -8,6 +8,7 @@ import { ScoreSelector } from "@/components/score-selector";
 import { HighScoreGate } from "@/components/high-score-gate";
 import { MessageCta } from "@/components/message-cta";
 import { PhotoFallback } from "@/components/fallbacks/photo-fallback";
+import { RadarRating } from "@/components/radar-rating";
 import { SafePhoto } from "@/components/safe-photo";
 import { AvatarFallback } from "@/components/fallbacks/avatar-fallback";
 import { ATTRIBUTES, ATTRIBUTE_LABELS, HIGH_SCORE_THRESHOLD, type AttributeKind } from "@/lib/constants";
@@ -18,6 +19,10 @@ export interface FeedCard {
   username: string;
   /** Colors the avatar disc (blue for males); null until they've answered the gate. */
   sex: BirthSex | null;
+  /** Staff marker: green avatar disc. */
+  isAdmin: boolean;
+  /** Server-computed "3 hours ago" / "July 12" label for the photo's age. */
+  postedLabel: string;
 }
 
 /** A tapped 9/10 waiting for confirmation: where it goes + the value. */
@@ -36,6 +41,7 @@ export function RatingFlow({ initialCards }: { initialCards: FeedCard[] }) {
   const [overallScore, setOverallScore] = useState<number | null>(null);
   const [attributeScores, setAttributeScores] = useState<Partial<Record<AttributeKind, number>>>({});
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [useButtons, setUseButtons] = useState(false);
   const [pendingHighScore, setPendingHighScore] = useState<PendingHighScore | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [leaving, setLeaving] = useState(false);
@@ -58,6 +64,15 @@ export function RatingFlow({ initialCards }: { initialCards: FeedCard[] }) {
     } else {
       applyScore(target, score);
     }
+  }
+
+  /** Unsets one attribute (radar: spoke dragged into the center). */
+  function clearAttribute(attribute: AttributeKind) {
+    setAttributeScores((current) => {
+      const next = { ...current };
+      delete next[attribute];
+      return next;
+    });
   }
 
   function resetCardState() {
@@ -141,8 +156,16 @@ export function RatingFlow({ initialCards }: { initialCards: FeedCard[] }) {
 
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2">
-          <AvatarFallback name={card.username} sex={card.sex} sizeClass="size-8" />
-          <span className="text-sm font-semibold text-ink">@{card.username}</span>
+          <AvatarFallback
+            name={card.username}
+            sex={card.sex}
+            isAdmin={card.isAdmin}
+            sizeClass="size-8"
+          />
+          <span>
+            <span className="block text-sm font-semibold text-ink">@{card.username}</span>
+            <span className="block text-xs text-ink-faint">{card.postedLabel}</span>
+          </span>
         </div>
         <MessageCta username={card.username} variant="header" />
       </div>
@@ -179,21 +202,38 @@ export function RatingFlow({ initialCards }: { initialCards: FeedCard[] }) {
           {detailsOpen ? "Hide details" : "Rate details (optional)"}
         </button>
         {detailsOpen && (
-          <ul className="mt-3 flex flex-col gap-3">
-            {ATTRIBUTES.map((attribute) => (
-              <li key={attribute} className="flex flex-col gap-1.5">
-                <span className="text-xs font-semibold uppercase tracking-wide text-ink-faint">
-                  {ATTRIBUTE_LABELS[attribute]}
-                </span>
-                <ScoreSelector
-                  compact
-                  value={attributeScores[attribute] ?? null}
-                  onSelect={(score) => handleSelect(attribute, score)}
-                  ariaLabel={`${ATTRIBUTE_LABELS[attribute]} score from 1 to 10`}
-                />
-              </li>
-            ))}
-          </ul>
+          <div className="mt-3">
+            {useButtons ? (
+              <ul className="flex flex-col gap-3">
+                {ATTRIBUTES.map((attribute) => (
+                  <li key={attribute} className="flex flex-col gap-1.5">
+                    <span className="text-xs font-semibold uppercase tracking-wide text-ink-faint">
+                      {ATTRIBUTE_LABELS[attribute]}
+                    </span>
+                    <ScoreSelector
+                      compact
+                      value={attributeScores[attribute] ?? null}
+                      onSelect={(score) => handleSelect(attribute, score)}
+                      ariaLabel={`${ATTRIBUTE_LABELS[attribute]} score`}
+                    />
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <RadarRating
+                values={attributeScores}
+                onSelect={handleSelect}
+                onClear={clearAttribute}
+              />
+            )}
+            <button
+              type="button"
+              onClick={() => setUseButtons((current) => !current)}
+              className="mt-3 text-xs font-semibold text-ink-faint underline decoration-line underline-offset-4 hover:text-ink"
+            >
+              {useButtons ? "Back to the radar" : "Prefer number buttons?"}
+            </button>
+          </div>
         )}
       </section>
 

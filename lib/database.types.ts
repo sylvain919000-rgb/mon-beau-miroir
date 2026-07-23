@@ -5,7 +5,8 @@
 
 export type AttributeKind =
   | "hair" | "forehead" | "eyes" | "nose" | "lips" | "jawline"
-  | "chest" | "arms" | "abs" | "hands" | "thighs" | "butt" | "feet";
+  | "chest" | "arms" | "abs" | "hands" | "thighs" | "butt" | "feet"
+  | "fashion";
 
 export type PhotoStatus = "active" | "removed";
 export type ModerationStatus = "pending" | "approved" | "rejected";

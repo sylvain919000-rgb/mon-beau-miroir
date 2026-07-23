@@ -29,10 +29,19 @@ export default async function ThreadPage({
 
   const { data: counterpart } = await supabase
     .from("profiles")
-    .select("id, username, display_name")
+    .select("id, username, display_name, birth_sex, is_admin")
     .eq("username", username)
     .maybeSingle();
   if (!counterpart || counterpart.id === user.id) notFound();
+
+  // Admins send without credits (enforced in the send_message RPC);
+  // this just keeps the paywall from popping at them.
+  const { data: myProfile } = await supabase
+    .from("profiles")
+    .select("is_admin")
+    .eq("id", user.id)
+    .single();
+  const iAmAdmin = myProfile?.is_admin ?? false;
 
   const [{ data: messages }, entitlements] = await Promise.all([
     supabase
@@ -52,10 +61,20 @@ export default async function ThreadPage({
       <main className="mx-auto flex w-full max-w-md flex-col px-4 py-8">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <AvatarFallback name={counterpart.username} sizeClass="size-9" />
+            <AvatarFallback
+              name={counterpart.username}
+              sex={counterpart.birth_sex}
+              isAdmin={counterpart.is_admin}
+              sizeClass="size-9"
+            />
             <div>
               <p className="text-sm font-semibold text-ink">
                 {counterpart.display_name ?? counterpart.username}
+                {counterpart.is_admin && (
+                  <span className="ml-1.5 rounded-pill bg-success px-2 py-0.5 text-xs font-bold text-bg">
+                    Admin
+                  </span>
+                )}
               </p>
               <p className="text-xs text-ink-faint">@{counterpart.username}</p>
             </div>
@@ -104,7 +123,7 @@ export default async function ThreadPage({
         <ThreadComposer
           recipientId={counterpart.id}
           recipientUsername={counterpart.username}
-          canSend={entitlements.canSend}
+          canSend={entitlements.canSend || iAmAdmin}
         />
       </main>
     </>

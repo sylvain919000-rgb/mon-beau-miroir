@@ -41,7 +41,7 @@ export default async function HistoryPage() {
 
   const ownerIds = [...new Set((visiblePhotos ?? []).map((photo) => photo.owner_id))];
   const { data: owners } = ownerIds.length
-    ? await supabase.from("profiles").select("id, username, birth_sex").in("id", ownerIds)
+    ? await supabase.from("profiles").select("id, username, birth_sex, is_admin").in("id", ownerIds)
     : { data: [] };
   const ownerByOwnerId = new Map((owners ?? []).map((owner) => [owner.id, owner]));
 
@@ -108,6 +108,7 @@ export default async function HistoryPage() {
                       <AvatarFallback
                         name={username}
                         sex={owner?.birth_sex ?? null}
+                        isAdmin={owner?.is_admin ?? false}
                         sizeClass="size-7"
                       />
                       <span>

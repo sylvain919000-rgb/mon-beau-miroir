@@ -39,7 +39,7 @@ export default async function PhotoPage({
   const [{ data: owner }, { data: rawStats }] = await Promise.all([
     supabase
       .from("profiles")
-      .select("username, display_name, birth_sex")
+      .select("username, display_name, birth_sex, is_admin")
       .eq("id", photo.owner_id)
       .single(),
     supabase.rpc("get_photo_stats", { p_photo: photoId }),
@@ -56,7 +56,12 @@ export default async function PhotoPage({
       <main className="mx-auto w-full max-w-md px-4 py-8">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-2">
-            <AvatarFallback name={owner.username} sex={owner.birth_sex} sizeClass="size-9" />
+            <AvatarFallback
+              name={owner.username}
+              sex={owner.birth_sex}
+              isAdmin={owner.is_admin}
+              sizeClass="size-9"
+            />
             <div>
               <p className="text-sm font-semibold text-ink">
                 {owner.display_name ?? owner.username}

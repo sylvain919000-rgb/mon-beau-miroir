@@ -1,6 +1,7 @@
 import { AppNav } from "@/components/app-nav";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import { postedAgo } from "@/lib/relative-time";
 import { DemographicsGate } from "./demographics-gate";
 import { RatingFlow, type FeedCard } from "./rating-flow";
 
@@ -41,7 +42,7 @@ export default async function FeedPage() {
 
   let queueQuery = supabase
     .from("photos")
-    .select("id, owner_id")
+    .select("id, owner_id, created_at")
     .eq("status", "active")
     .eq("moderation", "approved")
     .neq("owner_id", user.id)
@@ -55,7 +56,10 @@ export default async function FeedPage() {
   // Owner usernames for the cards (separate query keeps types simple).
   const ownerIds = [...new Set((photos ?? []).map((photo) => photo.owner_id))];
   const { data: owners } = ownerIds.length
-    ? await supabase.from("profiles").select("id, username, birth_sex").in("id", ownerIds)
+    ? await supabase
+        .from("profiles")
+        .select("id, username, birth_sex, is_admin")
+        .in("id", ownerIds)
     : { data: [] };
   const ownerById = new Map((owners ?? []).map((owner) => [owner.id, owner]));
 
@@ -63,6 +67,8 @@ export default async function FeedPage() {
     photoId: photo.id,
     username: ownerById.get(photo.owner_id)?.username ?? "member",
     sex: ownerById.get(photo.owner_id)?.birth_sex ?? null,
+    isAdmin: ownerById.get(photo.owner_id)?.is_admin ?? false,
+    postedLabel: postedAgo(photo.created_at),
   }));
 
   return (

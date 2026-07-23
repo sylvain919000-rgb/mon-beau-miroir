@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/admin";
+import { appUrl, notifyUserByEmail } from "@/lib/email/notifications";
+import { copy } from "@/lib/copy";
 
 interface ActionResult {
   error: string | null;
@@ -21,6 +23,21 @@ export async function approvePhoto(photoId: string): Promise<ActionResult> {
     report_id: null,
     action: "photo_approved",
   });
+
+  // Tell the owner their photo is live (best-effort, never blocks).
+  const { data: photo } = await service
+    .from("photos")
+    .select("owner_id")
+    .eq("id", photoId)
+    .single();
+  if (photo) {
+    await notifyUserByEmail(
+      photo.owner_id,
+      copy.emails.approvedSubject,
+      copy.emails.approvedBody(appUrl())
+    );
+  }
+
   revalidatePath("/admin");
   return { error: null };
 }

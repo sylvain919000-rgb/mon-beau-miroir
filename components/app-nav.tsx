@@ -14,13 +14,17 @@ export async function AppNav() {
   } = await supabase.auth.getUser();
 
   let username: string | null = null;
+  let birthSex: "male" | "female" | null = null;
+  let isAdmin = false;
   if (user) {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("username")
+      .select("username, birth_sex, is_admin")
       .eq("id", user.id)
       .single();
     username = profile?.username ?? null;
+    birthSex = profile?.birth_sex ?? null;
+    isAdmin = profile?.is_admin ?? false;
   }
 
   return (
@@ -32,6 +36,11 @@ export async function AppNav() {
         <div className="flex items-center gap-4 text-sm font-medium text-ink-soft">
           {user ? (
             <>
+              {isAdmin && (
+                <Link href="/admin" className="font-semibold text-success hover:text-ink">
+                  Admin
+                </Link>
+              )}
               <Link
                 href="/feed"
                 className="rounded-pill bg-amber px-4 py-1.5 font-semibold text-bg shadow-soft transition-colors duration-[var(--mbm-dur-fast)] ease-mbm hover:bg-amber-strong"
@@ -42,7 +51,12 @@ export async function AppNav() {
                 Inbox
               </Link>
               <Link href="/me" className="flex items-center gap-2 hover:text-ink">
-              <AvatarFallback name={username ?? "?"} sizeClass="size-8" />
+              <AvatarFallback
+                name={username ?? "?"}
+                sex={birthSex}
+                isAdmin={isAdmin}
+                sizeClass="size-8"
+              />
                 <span className="hidden sm:inline">{username}</span>
               </Link>
             </>

@@ -47,6 +47,7 @@ export const copy = {
   moderation: {
     pending:
       "Hang tight — your photo is being reviewed. It'll be visible to others shortly.",
+    approved: "Approved — your photo is live and can be rated.",
     rejected:
       "We couldn't approve this photo. Please upload a photo that follows our guidelines.",
   },
@@ -67,6 +68,28 @@ export const copy = {
     toggleOffHelp: "Off (default): only you can see your attribute breakdown.",
     toggleOnHelp:
       "On: anyone viewing your photo sees your averages per attribute. You can turn this off anytime — it hides instantly.",
+  },
+
+  emails: {
+    pendingSubject: "Your photo is in review 👀",
+    pendingBody: (url: string) =>
+      `Thanks for your upload!\n\nYour photo is now being reviewed by our team. ` +
+      `It becomes visible to other members the moment it's approved — we'll email you.\n\n` +
+      `Check your mirror anytime: ${url}/me\n\n— Mon Beau Miroir`,
+    approvedSubject: "Your photo is live ✨",
+    approvedBody: (url: string) =>
+      `Good news — your photo has been approved and is now live!\n\n` +
+      `Members can see and rate it from this moment. Watch your first ratings ` +
+      `land here: ${url}/me/insights\n\n— Mon Beau Miroir`,
+    milestoneSubject: (count: number) =>
+      count === 1
+        ? "Your first rating just landed 🎉"
+        : `You've reached ${count} ratings 🎉`,
+    milestoneBody: (count: number, url: string) =>
+      (count === 1
+        ? `Someone just rated your photo — your very first rating!`
+        : `Your photo just received its rating number ${count}.`) +
+      `\n\nSee your average and the full breakdown: ${url}/me/insights\n\n— Mon Beau Miroir`,
   },
 
   demographics: {

@@ -1,14 +1,22 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { AppNav } from "@/components/app-nav";
 import { Hero3D } from "@/components/hero-3d";
+import { createClient } from "@/lib/supabase/server";
 import { copy } from "@/lib/copy";
 
 /**
- * Landing page: tagline + CTAs on the left, the 3D mirror hero on the
- * right (stacked on mobile, hero first so it hooks before the pitch),
- * then a three-step "how it works" strip.
+ * Landing page for anonymous visitors: tagline + CTAs on the left, the
+ * 3D mirror hero on the right, then a three-step "how it works" strip.
+ * Logged-in members skip the pitch — their home is the rating feed.
  */
-export default function HomePage() {
+export default async function HomePage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (user) redirect("/feed");
+
   return (
     <>
       <AppNav />

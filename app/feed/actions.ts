@@ -1,8 +1,9 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { ATTRIBUTES, type AttributeKind } from "@/lib/constants";
 import { copy } from "@/lib/copy";
+import { RATING_MILESTONES, appUrl, notifyUserByEmail } from "@/lib/email/notifications";
 import type { BirthSex } from "@/lib/database.types";
 
 export interface SubmitRatingInput {
@@ -17,12 +18,13 @@ export interface SubmitRatingResult {
 }
 
 function isValidScore(value: unknown): value is number {
-  // 7 is banned by product design (no fence-sitting), so the server
-  // rejects it too — the UI rule must not be bypassable by a raw request.
+  // The offered scale is 3-10 without 7 (no 1/2 cruelty scores, no
+  // fence-sitting 7) — enforced here too so the UI rule can't be
+  // bypassed by a raw request. Historical 1/2/7 rows remain valid data.
   return (
     typeof value === "number" &&
     Number.isInteger(value) &&
-    value >= 1 &&
+    value >= 3 &&
     value <= 10 &&
     value !== 7
   );
@@ -91,12 +93,12 @@ export async function saveDemographics(
  */
 export async function submitRating(input: SubmitRatingInput): Promise<SubmitRatingResult> {
   if (!isValidScore(input.score)) {
-    return { error: "Scores must be whole numbers from 1 to 10 — and 7 isn't offered." };
+    return { error: "Scores must be whole numbers from 3 to 10 — and 7 isn't offered." };
   }
   const attributes: Record<string, number> = {};
   for (const [attribute, score] of Object.entries(input.attributes)) {
     if (!ATTRIBUTES.includes(attribute as AttributeKind) || !isValidScore(score)) {
-      return { error: "Scores must be whole numbers from 1 to 10 — and 7 isn't offered." };
+      return { error: "Scores must be whole numbers from 3 to 10 — and 7 isn't offered." };
     }
     attributes[attribute] = score;
   }
@@ -133,5 +135,39 @@ export async function submitRating(input: SubmitRatingInput): Promise<SubmitRati
     }
     return { error: "Your rating didn't go through. It's back in your queue." };
   }
+
+  await maybeSendMilestoneEmail(input.photoId);
   return { error: null };
+}
+
+/**
+ * After a successful rating: if the photo just reached a milestone
+ * count (1st, 3rd, 5th, 10th), congratulate the owner by email.
+ * Service role because the rater's session can't see other people's
+ * rating rows (by design). Best-effort — never fails the rating.
+ */
+async function maybeSendMilestoneEmail(photoId: string): Promise<void> {
+  try {
+    const service = createServiceClient();
+    const { count } = await service
+      .from("ratings")
+      .select("id", { count: "exact", head: true })
+      .eq("photo_id", photoId);
+    if (!count || !RATING_MILESTONES.includes(count)) return;
+
+    const { data: photo } = await service
+      .from("photos")
+      .select("owner_id")
+      .eq("id", photoId)
+      .single();
+    if (!photo) return;
+
+    await notifyUserByEmail(
+      photo.owner_id,
+      copy.emails.milestoneSubject(count),
+      copy.emails.milestoneBody(count, appUrl())
+    );
+  } catch (error) {
+    console.error("Milestone email failed", error);
+  }
 }

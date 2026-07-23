@@ -38,6 +38,28 @@ export default async function AdminPage() {
     : { data: [] };
   const messageBodyById = new Map((reportedMessages ?? []).map((m) => [m.id, m.body]));
 
+  // Whose photo is this? Owner usernames for every photo on the desk
+  // (pending queue + reported photos).
+  const reportedPhotoIds = (openReports ?? [])
+    .map((report) => report.photo_id)
+    .filter((id): id is string => id !== null);
+  const { data: reportedPhotos } = reportedPhotoIds.length
+    ? await service.from("photos").select("id, owner_id").in("id", reportedPhotoIds)
+    : { data: [] };
+  const ownerIdByPhotoId = new Map<string, string>([
+    ...(pendingPhotos ?? []).map((photo) => [photo.id, photo.owner_id] as [string, string]),
+    ...(reportedPhotos ?? []).map((photo) => [photo.id, photo.owner_id] as [string, string]),
+  ]);
+  const ownerIds = [...new Set(ownerIdByPhotoId.values())];
+  const { data: owners } = ownerIds.length
+    ? await service.from("profiles").select("id, username").in("id", ownerIds)
+    : { data: [] };
+  const usernameByOwnerId = new Map((owners ?? []).map((owner) => [owner.id, owner.username]));
+  const usernameForPhoto = (photoId: string) => {
+    const ownerId = ownerIdByPhotoId.get(photoId);
+    return ownerId ? usernameByOwnerId.get(ownerId) : undefined;
+  };
+
   return (
     <>
       <AppNav />
@@ -62,7 +84,10 @@ export default async function AdminPage() {
               {(pendingPhotos ?? []).map((photo) => (
                 <li key={photo.id} className="rounded-lg border border-line bg-surface p-3">
                   <SafePhoto photoId={photo.id} alt="Pending photo" />
-                  <p className="mt-2 text-xs text-ink-faint">
+                  <p className="mt-2 text-sm font-semibold text-ink">
+                    @{usernameForPhoto(photo.id) ?? "unknown"}
+                  </p>
+                  <p className="text-xs text-ink-faint">
                     Uploaded {new Date(photo.created_at).toLocaleString()}
                   </p>
                   <PendingPhotoControls photoId={photo.id} />
@@ -89,6 +114,9 @@ export default async function AdminPage() {
                   {report.photo_id && (
                     <div className="mt-2">
                       <SafePhoto photoId={report.photo_id} alt="Reported photo" />
+                      <p className="mt-2 text-sm font-semibold text-ink">
+                        @{usernameForPhoto(report.photo_id) ?? "unknown"}
+                      </p>
                     </div>
                   )}
                   {report.message_id && (

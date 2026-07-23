@@ -65,10 +65,15 @@ export default async function InboxPage() {
           </p>
         ) : (
           <ul className="mt-4 flex flex-col gap-2">
-            {conversations.map(([senderUsername, info]) => (
+            {conversations.map(([senderUsername, info]) => {
+              // Admin conversations are always readable (migration 0009),
+              // so their rows link through even without a pass.
+              const senderIsAdmin = senderByUsername.get(senderUsername)?.is_admin ?? false;
+              const openable = entitlements.canRead || senderIsAdmin;
+              return (
               <li key={senderUsername}>
                 <Link
-                  href={entitlements.canRead ? `/inbox/${senderUsername}` : "/inbox"}
+                  href={openable ? `/inbox/${senderUsername}` : "/inbox"}
                   className="flex items-center gap-3 rounded-lg border border-line bg-surface p-3 transition-colors duration-[var(--mbm-dur-fast)] ease-mbm hover:bg-surface-2"
                 >
                   <AvatarFallback
@@ -86,10 +91,11 @@ export default async function InboxPage() {
                       {new Date(info.latest).toLocaleString()}
                     </span>
                   </span>
-                  {!entitlements.canRead && <span aria-hidden>🔒</span>}
+                  {!openable && <span aria-hidden>🔒</span>}
                 </Link>
               </li>
-            ))}
+              );
+            })}
           </ul>
         )}
 

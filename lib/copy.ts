@@ -7,6 +7,8 @@
 export const copy = {
   appName: "Mon Beau Miroir",
   tagline: "One photo. Honest human ratings. Prove you're a 10 out a 10.",
+  /** The one official contact address for legal, privacy and support. */
+  contactEmail: "mbm.bereytapps@gmail.com",
 
   signup: {
     termsTitle: "The short version of our Terms",
@@ -27,7 +29,7 @@ export const copy = {
       "Your attribute ratings are private to you by default. They only become visible to others if you switch them to public.",
       "We never sell your photo or your data. We use Stripe for payments — we never see your card number.",
       "You can delete your account anytime; your photo and ratings go with it.",
-      "Questions or data requests (GDPR): privacy@monbeaumiroir.com",
+      "Questions or data requests (GDPR): mbm.bereytapps@gmail.com",
     ],
   },
 

@@ -84,7 +84,7 @@ export default async function ThreadPage({
           )}
         </div>
 
-        {!entitlements.canRead && (
+        {!entitlements.canRead && !counterpart.is_admin && (
           <p className="mt-4 rounded-md bg-surface-2 p-3 text-xs text-ink-soft">
             You&apos;re seeing only the messages you sent. Unlock your inbox to
             read replies.
